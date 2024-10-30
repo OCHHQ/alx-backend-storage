@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""A script that fetches and displays log statistics from MongoDB.
-"""
+"""A script that fetches and displays log statistics from MongoDB."""
 
 from pymongo import MongoClient
-from collections import Counter
 
 
 def log_stats():
@@ -17,32 +15,25 @@ def log_stats():
     print(f"{total_logs} logs")
 
     # Count the HTTP methods
-    methods = Counter()
-    for log in collection.find():
-        method = log.get("method")
-        methods[method] += 1
-
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
     print("Methods:")
-    for method, count in methods.most_common():
-        print(f"\tmethod {method}: {count}")
+    for method in methods:
+        method_count = collection.count_documents({"method": method})
+        print(f"\tmethod {method}: {method_count}")
 
-    # Count status codes
-    status_count = Counter()
-    for log in collection.find():
-        status_code = log.get("status")
-        status_count[status_code] += 1
+    # Count status check occurrences
+    status_count = collection.count_documents({"path": "/status"})
+    print(f"{status_count} status check")
 
-    print(f"{sum(status_count.values())} status check")
-
-    # Count IPs
-    ip_count = Counter()
-    for log in collection.find():
-        ip = log.get("ip")
-        ip_count[ip] += 1
-
+    # Top 10 most common IPs
     print("IPs:")
-    for ip, count in ip_count.most_common(10):
-        print(f"\t{ip}: {count}")
+    top_ips = collection.aggregate([
+        {"$group": {"_id": "$ip", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ])
+    for ip in top_ips:
+        print(f"\t{ip['_id']}: {ip['count']}")
 
 
 if __name__ == "__main__":
