@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+A script to display log statistics from the 'nginx' collection within the 'logs' database in MongoDB.
+It outputs the total log count, counts of each HTTP method, and the count of status checks.
+"""
 from pymongo import MongoClient
 
 
