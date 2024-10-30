@@ -1,29 +1,19 @@
 #!/usr/bin/env python3
 """
-Module for MongoDB operations - listing all documents in a collection
+Script to list all documents in a MongoDB collection.
 """
-from typing import List
-from pymongo.collection import Collection
 
 
-def list_all(mongo_collection: Collection) -> List:
+def list_all(mongo_collection):
     """
-    Lists all documents in a MongoDB collection.
+    Lists all documents in a collection.
 
-    Args:
-        mongo_collection: PyMongo collection object to query from
+    Parameters:
+    mongo_collection (pymongo.collection.Collection):
+    The MongoDB collection object.
 
     Returns:
-        List of all documents in the collection
-        Empty list if no documents are found or if collection is invalid
+    list: A list of all documents in the collection, or an
+    empty list if no documents are found.
     """
-    if mongo_collection is None:
-        return []
-    
-    try:
-        # Find all documents in the collection and convert cursor to list
-        documents = list(mongo_collection.find())
-        return documents
-    except Exception:
-        # Return empty list if any error occurs
-        return []
+    return list(mongo_collection.find())
