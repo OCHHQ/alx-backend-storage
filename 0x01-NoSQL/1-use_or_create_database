@@ -1,1 +1,2 @@
-use my_db
+// Script to create or switch to database my_db
+use my_db;
