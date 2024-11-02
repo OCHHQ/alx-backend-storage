@@ -58,22 +58,24 @@ def call_history(method: Callable) -> Callable:
     REDIS LISTS:
         work like python list but store in REDIS
     """
+    input = method.__qualname__ + ":inputs"
+    outputs = method.__qualname__ + ":outputs"
+
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        # CREATING A REDIS LIST USING FUNCTION NAME
-        input_key = f"{method.__qualname__}: inputs"
-        output_key = f"{method.__qualname__}: outputs"
-
+        """
+        wrapper that function as track to I/O using redis
+        """
         #STORE I ARGUMENTS AS STRING IN REDIS LIST
         self._redis.rpush(input_list, str(args))
 
-        #EXECUTE THE FUNCTION AND STORE RESULT
-        result = method(self, *args, **kwargs)
+        #EXECUTE the wrapper function and store its output
+        output = method(self, *args, **kwargs)
 
         #STORE O IN REDIS LIST
-        self._redis.rpush(output_list, str(result))
+        self._redis.rpush(output_list, str(output))
 
-        return result
+        return output
     
     return wrapper
 
