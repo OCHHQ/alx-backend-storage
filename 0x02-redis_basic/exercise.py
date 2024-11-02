@@ -73,3 +73,18 @@ class Cache:
         return method(self, *args, **kwargs)
 
     return wrapper
+
+
+class Cache:
+    """Cache class that stores data in Redis."""
+    def __init__(self):
+        """Initialize Cache with Redis client and flush database."""
+        self._redis = redis.Redis()
+        self._redis.flushdb()
+
+    @count_calls
+    def store(self, data: Union[str, bytes, int, float]) -> str:
+        """Store data in Redis with a random key and return the key."""
+        key = str(uuid.uuid4())
+        self._redis.set(key, data)
+        return key
