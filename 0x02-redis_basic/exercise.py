@@ -5,7 +5,7 @@ This module provides a Cache class for basic Redis operations.
 
 import redis
 import uuid
-from typing import Union,Callable,Optional
+from typing import Union, Callable, Optional
 
 
 class Cache:
@@ -35,8 +35,13 @@ class Cache:
         self._redis.set(key, data)  # Store data in Redis with the key
         return key
 
-    def get(self. key: str, fn: Optional[callable] = None ) -> Optional[Union[str, bytes, int, float]]:
-        """Here i am trying to understand Retrieve data from redis and optionally
+    def get(
+            self,
+            key: str,
+            fn: Optional[callable] = None
+    ) -> Optional[Union[str, bytes, int, float]]:
+        """Here i am trying to understand
+        Retrieve data from redis and optionally
         apply converstion function
         """
         data = self._redis.get(key)
@@ -47,7 +52,7 @@ class Cache:
 
     def get_str(self, key: str) -> Optional[str]:
         """Retrieve a string from redis."""
-        return self.get(key, lambda x:x.decode('utf-8'))
+        return self.get(key, lambda x: x.decode('utf-8'))
 
     def get_int(self, key: str) -> Optional[int]:
         """Retrieve an integar from radis"""
