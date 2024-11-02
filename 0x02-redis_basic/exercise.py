@@ -47,6 +47,36 @@ def count_calls(method: Callable) -> Callable:
 
     return wrapper
 
+def call_history(method: Callable) -> Callable:
+    """Store history of I/O for a particular fuction
+
+
+    REDIS COMMAND USED:
+        RPUSH - Append Values to the end of a list
+        LRANGE - Retrieves elements of the list (used in my main.py)
+
+    REDIS LISTS:
+        work like python list but store in REDIS
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        # CREATING A REDIS LIST USING FUNCTION NAME
+        input_key = f"{method.__qualname__}: inputs"
+        output_key = f"{method.__qualname__}: outputs"
+
+        #STORE I ARGUMENTS AS STRING IN REDIS LIST
+        self.__redis.rpush(input_list, str(args))
+
+        #EXECUTE THE FUNCTION AND STORE RESULT
+        result = method(self, *args, **kwargs)
+
+        #STORE O IN REDIS LIST
+        self._redis.rpush(output_list, str(result))
+
+        return result
+    
+    return wrapper
+
 
 class Cache:
     """
@@ -65,8 +95,9 @@ class Cache:
         to ensure a clean state.
         """
         self._redis = redis.Redis()
-        self._redis.flushdb()
+        self._redis.flushdb() 
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
@@ -81,6 +112,8 @@ class Cache:
         Example:
             cache = Cache()
             key = cache.store("example")
+         REDIS COMMAND USED:
+            SET - store key_value pair in redis
         """
         key = str(uuid.uuid4())
         self._redis.set(key, data)
@@ -103,6 +136,9 @@ class Cache:
         Example:
             cache = Cache()
             data = cache.get("my_key", fn=int)
+
+         REDIS COMMAND USED:
+            GET: Retrieve value by key
         """
         data = self._redis.get(key)
         if data is None:
