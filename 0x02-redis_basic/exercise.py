@@ -56,3 +56,19 @@ class Cache:
     def get_int(self, key: str) -> Optional[int]:
         """Retrieve an integar from radis"""
         return self.get(key, int)
+
+    def count_calls(method: Callable) -> Callable:
+    """Decorator that counts how many times a method is called."""
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        # Define the Redis key based on the method's qualified name
+        key = method.__qualname__
+
+        # Increment the count in Redis
+        self._redis.incr(key)
+
+        # Call the original method and return its result
+        return method(self, *args, **kwargs)
+
+    return wrapper
