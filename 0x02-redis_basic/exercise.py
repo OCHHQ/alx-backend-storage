@@ -47,8 +47,7 @@ class Cache:
         data = self._redis.get(key)
         if data is None:
             return None
-        elif:
-            return fn(data) if fn else data
+        return fn(data) if fn else data
 
     def get_str(self, key: str) -> Optional[str]:
         """Retrieve a string from redis."""
