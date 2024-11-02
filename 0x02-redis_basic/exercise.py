@@ -65,7 +65,7 @@ def call_history(method: Callable) -> Callable:
         output_key = f"{method.__qualname__}: outputs"
 
         #STORE I ARGUMENTS AS STRING IN REDIS LIST
-        self.__redis.rpush(input_list, str(args))
+        self._redis.rpush(input_list, str(args))
 
         #EXECUTE THE FUNCTION AND STORE RESULT
         result = method(self, *args, **kwargs)
