@@ -27,7 +27,8 @@ def count_calls(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
-        Wrapper function that increments the call counter and executes the method.
+        Wrapper function that increments the 
+        call counter and executes the method.
         """
         self._redis.incr(key)
         return method(self, *args, **kwargs)
@@ -123,9 +124,11 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self,
+    def get(
+            self,
             key: str,
-            fn: Optional[Callable] = None) -> Union[str, bytes, int, float, None]:
+            fn: Optional[Callable] = None
+    ) -> Union[str, bytes, int, float, None]:
         """
         Retrieve data from Redis and optionally convert it.
         """
