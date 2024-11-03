@@ -94,11 +94,11 @@ def replay(method: Callable) -> None:
     inputs = redis_instance.lrange(f"{method_name}:inputs", 0, -1)
     outputs = redis_instance.lrange(f"{method_name}:outputs", 0, -1)
 
-    # Print each call
+    # Print each call with the expected format
     for input_data, output_data in zip(inputs, outputs):
         input_str = input_data.decode('utf-8')
         output_str = output_data.decode('utf-8')
-        print(f"{method_name}{input_str} -> {output_str}")
+        print(f"{method_name}(*{input_str}) -> {output_str}")
 
 
 class Cache:
