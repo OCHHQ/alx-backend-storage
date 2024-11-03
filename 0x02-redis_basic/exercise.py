@@ -27,7 +27,7 @@ def count_calls(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
-        Wrapper function that increments the 
+        Wrapper function that increments the
         call counter and executes the method.
         """
         self._redis.incr(key)
