@@ -53,22 +53,13 @@ def cache_result(method: Callable) -> Callable:
 @cache_result
 def get_page(url: str) -> str:
     """
-    fetch the HTML content of a URL and return it
-    uses request to fetch the content and cache
-    the result for 10 sec
+    Fetch the HTML content of a URL and return it
+    Uses requests to fetch the content
+
     Args:
         url(str): The URL to fetch.
-    Return:
+    Returns:
         str: The HTML content of the url
     """
-    # increase the access count for the url
-    redis_instance.incr(f"count:{url}")
-
-    # check if the content is already cached
-    cached_content = redis_instance.get(f"cache:{url}")
-    if cached_content:
-        return cached_content.decode("utf-8")
-
     response = requests.get(url)
-    redis_instance.setex(f"cache:{url}", 10, response.text)
     return response.text
