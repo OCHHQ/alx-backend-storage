@@ -52,7 +52,7 @@ def cache_result(method: Callable) -> Callable:
 
 @track_access
 @cache_result
-def get_page(url: str) -> str::
+def get_page(url: str) -> str:
     """
     fetch the HTML content of a URL and return it
     uses request to fetch the content and cache
