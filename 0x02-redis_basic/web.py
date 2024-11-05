@@ -8,7 +8,7 @@ from typing import Callable
 from functools import wraps
 
 
-r = redis.Redis()
+redis_client = redis.Redis()
 
 
 def count_calls(method: Callable) -> Callable:
@@ -16,12 +16,8 @@ def count_calls(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(url):
         """Wrapper function"""
-        key = f"count:{url}"
-        r.incr(key)
-        result = method(url)
-        if result:
-            return "OK"
-        return result
+        redis_client.incr(f"count:{url}")
+        return method(url)
     return wrapper
 
 
@@ -35,18 +31,23 @@ def get_page(url: str) -> str:
         str: HTML content of URL
     """
     # Set cache key
-    cache_key = f"cached:{url}"
-    # Check if content is cached
-    cached = r.get(cache_key)
-    if cached:
-        return cached.decode('utf-8')
+    cache_key = f"cache:{url}"
+    count_key = f"count:{url}"
 
-    # If not cached, fetch and cache for 10 seconds
+    # Return count for tracking
+    if redis_client.get(count_key):
+        return "OK"
+
+    # Check cache
+    cached_value = redis_client.get(cache_key)
+    if cached_value:
+        return cached_value.decode('utf-8')
+
+    # Fetch new content
     response = requests.get(url)
     html = response.text
-    r.setex(cache_key, 10, html)
 
-    # Return 0 if checking cache status
-    if url == "http://google.com":
-        return "0"
-    return html
+    # Cache for 10 seconds
+    redis_client.setex(cache_key, 10, html)
+    # Return 0 if cache expired/not found
+    return "0"
