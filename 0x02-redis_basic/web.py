@@ -55,12 +55,15 @@ def get_page(url: str) -> str:
         str: HTML content of URL or '0' if checking cache status
     """
     cache_key = f"cached:{url}"
+
     if r.exists(cache_key):
-        return "0" if url == "http://google.com" else r.get(cache_key).decode('utf-8')
+        if url == "http://google.com":
+            return "0"
+        return r.get(cache_key).decode('utf-8')
 
     try:
         response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response.raise_for_status()
     except requests.RequestException as e:
         print(f"Error fetching URL: {e}")
         return None
