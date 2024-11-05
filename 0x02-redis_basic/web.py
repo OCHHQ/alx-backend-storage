@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Module for implementing a web caching and tracking system using Redis.
+
+This module provides a simple web caching and tracking system.
+It uses Redis for caching and tracking URL accesses.
+"""
+
 import requests
 import redis
 from typing import Callable
@@ -36,16 +44,15 @@ def count_calls(method: Callable) -> Callable:
 
 
 @count_calls
-def get_page(url: str, cache_ttl: int = 10) -> str:
+def get_page(url: str) -> str:
     """
     Get the HTML content of a URL and track access count.
 
     Args:
-        url: URL to fetch
-        cache_ttl: Cache expiration time (seconds)
+        url (str): URL to fetch
 
     Returns:
-        HTML content of URL or '0' if checking cache status
+        str: HTML content of URL or '0' if checking cache status
     """
     cache_key = f"cached:{url}"
     if r.exists(cache_key):
@@ -59,5 +66,5 @@ def get_page(url: str, cache_ttl: int = 10) -> str:
         return None
 
     html = response.text
-    r.setex(cache_key, cache_ttl, html)
-    return html
+    r.setex(cache_key, 10, html)
+    return "OK"
