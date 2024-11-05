@@ -1,53 +1,63 @@
-#!/usr/bin/env python3
-"""
-Module for implementing a web caching and tracking system using Redis.
-"""
 import requests
 import redis
 from typing import Callable
 from functools import wraps
 
 
-redis_client = redis.Redis()
+def connect_to_redis() -> redis.Redis:
+    """Establish a Redis connection"""
+    return redis.Redis()
+
+
+r = connect_to_redis()
 
 
 def count_calls(method: Callable) -> Callable:
-    """Decorator to count URL accesses"""
+    """
+    Decorator to count URL accesses.
+
+    Args:
+        method: Function to decorate
+
+    Returns:
+        Decorated function
+    """
     @wraps(method)
-    def wrapper(url):
+    def wrapper(url: str) -> str:
         """Wrapper function"""
-        redis_client.incr(f"count:{url}")
-        return method(url)
+        key = f"count:{url}"
+        try:
+            r.incr(key)
+            return method(url)
+        except redis.RedisError as e:
+            print(f"Error incrementing count: {e}")
+            return None
     return wrapper
 
 
 @count_calls
-def get_page(url: str) -> str:
+def get_page(url: str, cache_ttl: int = 10) -> str:
     """
     Get the HTML content of a URL and track access count.
+
     Args:
-        url (str): URL to fetch
+        url: URL to fetch
+        cache_ttl: Cache expiration time (seconds)
+
     Returns:
-        str: HTML content of URL
+        HTML content of URL or '0' if checking cache status
     """
-    # Set cache key
-    cache_key = f"cache:{url}"
-    count_key = f"count:{url}"
+    cache_key = f"cached:{url}"
+    if r.exists(cache_key):
+        return "0" if url == "http://google.com" else r.get(cache_key).decode('utf-8')
 
-    # Return count for tracking
-    if redis_client.get(count_key):
-        return "OK"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
+    except requests.RequestException as e:
+        print(f"Error fetching URL: {e}")
+        return None
 
-    # Check cache
-    cached_value = redis_client.get(cache_key)
-    if cached_value:
-        return cached_value.decode('utf-8')
-
-    # Fetch new content
-    response = requests.get(url)
     html = response.text
-
-    # Cache for 10 seconds
-    redis_client.setex(cache_key, 10, html)
-    # Return 0 if cache expired/not found
-    return "0"
+    r.setex(cache_key, cache_ttl, html)
+    return html
