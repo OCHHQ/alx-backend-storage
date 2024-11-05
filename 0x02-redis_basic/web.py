@@ -1,65 +1,60 @@
 #!/usr/bin/env python3
 """
-web cache and tracker module
-As the name name implies : this module implement a craching
-system for fetching web pages.its tracks the number of accesses
-for each URL and caches the conent for a short duration to reduce
-repeated requests
+Module for implementing a web caching and tracking system using Redis.
 """
 import requests
 import redis
-from typing import Callable
 from functools import wraps
-
-# connect to radis
-cache = redis.Redis()
+from typing import Callable
 
 
-def track_access(method: Callable) -> Callable:
-    """
-    Here is implement a decorator to tarack numbers
-    of time a URL is accessed.
-    """
+def count_access(method: Callable) -> Callable:
+    """Decorator to count URL accesses"""
     @wraps(method)
     def wrapper(url: str) -> str:
-        # here track the numbers of accesses
-        cache.incr(f"count:{url}")
+        r = redis.Redis()
+        r.incr(f"count:{url}")
         return method(url)
-
     return wrapper
 
 
-def cache_result(method: Callable) -> Callable:
-    """
-    Decorator to cache the result of fetching
-    a URL for 10 seconds
-    """
+def cache_page(method: Callable) -> Callable:
+    """Decorator to cache page content"""
     @wraps(method)
     def wrapper(url: str) -> str:
-        # check if url is ready cached
-        cached_content = cache.get(f"cache:{url}")
-        if cached_content:
-            return cached_cntent.decode("utf-8")
-
-        # if not cached fetched the content and store within 10-seconds expiry
-        content = method(url)
-        cache.setx(f"cache:{url}", 10, content)
-        return content
-
+        r = redis.Redis()
+        # Check if content is cached
+        cached = r.get(f"cached:{url}")
+        if cached:
+            return cached.decode('utf-8')
+        # Get and cache content if not found
+        html = method(url)
+        r.setex(f"cached:{url}", 10, html)
+        return html
     return wrapper
 
 
-@track_access
-@cache_result
+@count_access
+@cache_page
 def get_page(url: str) -> str:
     """
-    Fetch the HTML content of a URL and return it
-    Uses requests to fetch the content
-
+    Get the HTML content of a URL and implement caching and access tracking.
     Args:
-        url(str): The URL to fetch.
+        url (str): The URL to fetch
     Returns:
-        str: The HTML content of the url
+        str: The HTML content of the page
     """
     response = requests.get(url)
     return response.text
+
+
+if __name__ == "__main__":
+    # Example usage with slowwly
+    url = ("http://slowwly.robertomurray.co.uk/delay/3000/url/"
+           "http://www.google.com")
+    # First call - should be slow
+    print(get_page(url))
+    print(f"Count: {redis.Redis().get(f'count:{url}')}")
+    # Second call should be fast (cached)
+    print(get_page(url))
+    print(f"Count: {redis.Redis().get(f'count:{url}')}")
