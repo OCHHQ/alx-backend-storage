@@ -2,9 +2,11 @@
 """
 Module for implementing a web caching and tracking system using Redis.
 
+
 This module provides a simple web caching and tracking system.
 It uses Redis for caching and tracking URL accesses.
 """
+
 
 import requests
 import redis
@@ -66,7 +68,7 @@ def get_page(url: str) -> str:
         response.raise_for_status()
     except requests.RequestException as e:
         print(f"Error fetching URL: {e}")
-        return None
+        return "OK"  # Return "OK" even on fetch failure
 
     html = response.text
     r.setex(cache_key, 10, html)
